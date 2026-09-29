@@ -1,0 +1,43 @@
+' Общий стиль для всех диаграмм проекта.
+' Подключается первой строкой после @startuml: !include ../../_style.puml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam ArrowColor #55606A
+skinparam ArrowFontColor #55606A
+
+skinparam actor {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+}
+skinparam usecase {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+  BorderThickness 1
+}
+skinparam rectangle {
+  BorderColor #E8A33D
+  FontStyle bold
+}
+skinparam package {
+  BorderColor #E8A33D
+  BackgroundColor #FCFCFC
+}
+skinparam class {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+  ArrowColor #55606A
+}
+skinparam note {
+  BorderColor #E8A33D
+  BackgroundColor #FFF6DA
+}
+skinparam sequence {
+  ArrowColor #55606A
+  LifeLineBorderColor #2C6FB0
+  ParticipantBorderColor #2C6FB0
+  ParticipantBackgroundColor #EAF2FB
+}
