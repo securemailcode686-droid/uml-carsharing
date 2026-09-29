@@ -1,0 +1,15 @@
+@startuml
+!include ../../_style.puml
+
+actor "Клиент" as c
+participant "Приложение" as app
+participant "Backend" as api
+participant "Бортовой модуль" as obu
+
+c   -> app : открыть авто
+app -> api : запрос на разблокировку(телефон)
+api -> obu : команда "разблокировать"
+obu --> api : подтверждение
+api --> app : доступ разрешён
+app --> c : "Авто открыт"
+@enduml

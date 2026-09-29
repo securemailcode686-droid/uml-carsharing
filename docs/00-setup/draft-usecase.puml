@@ -1,0 +1,25 @@
+@startuml
+!include ../../_style.puml
+left to right direction
+
+actor "Клиент"            as client
+actor "Оператор поддержки" as operator
+actor "Платёжный шлюз"    as gateway <<system>>
+
+rectangle "Каршеринг (черновик)" {
+  usecase "Найти автомобиль"      as UC1
+  usecase "Забронировать авто"    as UC2
+  usecase "Открыть авто по телефону" as UC3
+  usecase "Завершить аренду"      as UC4
+  usecase "Оплатить поездку"      as UC5
+  usecase "Начислить штраф"       as UC6
+}
+
+client   -- UC1
+client   -- UC2
+client   -- UC3
+client   -- UC4
+client   -- UC5
+operator -- UC6
+gateway  -- UC5
+@enduml

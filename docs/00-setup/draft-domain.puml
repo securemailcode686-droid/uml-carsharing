@@ -1,0 +1,24 @@
+@startuml
+!include ../../_style.puml
+
+class Клиент {
+  + фио : String
+  + телефон : String
+}
+class Автомобиль {
+  + госНомер : String
+  + модель : String
+}
+class Аренда {
+  + начало : DateTime
+  + конец : DateTime
+}
+class Штраф {
+  + сумма : Money
+  + причина : String
+}
+
+Клиент    "1" -- "0..*" Аренда
+Автомобиль "1" -- "0..*" Аренда
+Аренда    "1" -- "0..*" Штраф
+@enduml
