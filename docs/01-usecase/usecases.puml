@@ -1,0 +1,47 @@
+@startuml
+!include ../../_style.puml
+left to right direction
+title Сервис каршеринга: диаграмма вариантов использования
+
+actor "Клиент"               as client
+actor "Оператор поддержки"   as operator
+actor "Платёжный шлюз"       as gateway  <<system>>
+actor "Бортовой модуль\nавтомобиля" as obu <<system>>
+
+rectangle "Сервис каршеринга" {
+  usecase "Найти автомобиль\nпоблизости"        as UC_find
+  usecase "Забронировать\nавтомобиль"           as UC_book
+  usecase "Отменить бронь"                       as UC_cancel
+  usecase "Открыть автомобиль\nпо телефону"      as UC_unlock
+  usecase "Завершить аренду"                     as UC_end
+  usecase "Проверить зону\nзавершения аренды"    as UC_zone
+  usecase "Рассчитать стоимость\nпоездки"        as UC_calc
+  usecase "Оплатить поездку"                     as UC_pay
+  usecase "Оплатить картой"                      as UC_pay_card
+  usecase "Оплатить бонусным\nсчётом"            as UC_pay_bonus
+  usecase "Начислить штраф"                      as UC_fine
+  usecase "Аутентифицировать\nпользователя"      as UC_auth
+}
+
+client   -- UC_find
+client   -- UC_book
+client   -- UC_cancel
+client   -- UC_unlock
+client   -- UC_end
+client   -- UC_pay
+operator -- UC_fine
+
+obu     -- UC_unlock
+obu     -- UC_zone
+gateway -- UC_pay_card
+
+UC_book   ..> UC_auth : <<include>>
+UC_unlock ..> UC_auth : <<include>>
+UC_end    ..> UC_zone : <<include>>
+UC_end    ..> UC_calc : <<include>>
+
+UC_fine ..> UC_end : <<extend>>\n[вне зоны ИЛИ повреждение]
+
+UC_pay_card  --|> UC_pay
+UC_pay_bonus --|> UC_pay
+@enduml
