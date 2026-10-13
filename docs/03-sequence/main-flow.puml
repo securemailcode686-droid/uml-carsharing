@@ -1,0 +1,46 @@
+@startuml
+!include ../../_style.puml
+title ВИ-04 «Открыть автомобиль по телефону»: основной сценарий
+
+actor       "Клиент"               as c
+participant "Приложение"           as app
+participant "СервисАренды"         as svc
+participant "b-552 : Бронь"        as b
+actor       "Бортовой модуль"      as obu <<system>>
+
+c -> app : открыть(автомобиль)
+activate app
+app -> svc : открыть(клиент, автомобиль)
+activate svc
+
+svc -> b : проверитьАктивность()
+activate b
+b --> svc : АКТИВНА, до 18:25
+deactivate b
+
+svc -> svc : проверитьРасстояние(телефон, автомобиль)
+
+loop до 3 попыток, пока нет подтверждения (таймаут 10 с)
+  svc -> obu : разблокировать(госНомер)
+  activate obu
+  obu --> svc : подтверждение, координаты
+  deactivate obu
+end
+
+svc -> b : использовать()
+activate b
+b --> svc : ИСПОЛЬЗОВАНА
+deactivate b
+
+create participant "rent-901 : Аренда" as r
+svc -> r : <<create>> начать(бронь, время)
+activate r
+r -> r : запуститьТарификацию()
+r --> svc : аренда
+deactivate r
+
+svc --> app : аренда АКТИВНА
+deactivate svc
+app --> c : «Автомобиль открыт»
+deactivate app
+@enduml

@@ -1,0 +1,81 @@
+@startuml
+!include ../../_style.puml
+title ВИ-05 «Завершить аренду»: исключения
+
+actor       "Клиент"                 as c
+participant "Приложение"             as app
+participant "СервисАренды"           as svc
+actor       "Бортовой модуль"        as obu <<system>>
+participant "zone-3 : ЗонаЗавершения" as z
+participant "rent-901 : Аренда"      as r
+queue       "Очередь событий"        as bus
+
+c -> app : завершитьАренду()
+activate app
+app -> svc : завершить(аренда)
+activate svc
+svc -> r : начатьЗавершение()
+activate r
+r --> svc : ЗАВЕРШАЕТСЯ
+deactivate r
+
+loop до 3 попыток, пока нет ответа (таймаут 10 с)
+  svc -> obu : запроситьКоординаты()
+  activate obu
+  obu --> svc : координаты, пробег
+  deactivate obu
+end
+
+opt координаты получены
+  svc -> z : содержит(координаты)
+  activate z
+  z --> svc : да / нет
+  deactivate z
+end
+
+opt автомобиль вне зоны
+  svc --> app : вне зоны, штраф 3000 ₽
+  app --> c : «Продолжить поездку или завершить со штрафом?»
+  c -> app : выбор
+  app -> svc : решение(выбор)
+end
+
+alt координаты не получены и последним больше 3 мин
+  svc -> r : отправитьНаПроверку()
+  svc ->> bus : ManualCheckRequired
+  svc --> app : аренда ожидает проверки оператором
+
+else вне зоны и клиент выбрал «Продолжить»
+  svc -> r : продолжить()
+  svc --> app : отказ: переставьте авто в зону
+
+else вне зоны и клиент подтвердил завершение
+  svc -> r : добавитьШтраф(ЗАВЕРШЕНИЕ_ВНЕ_ЗОНЫ)
+  svc -> r : завершить(время, пробег)
+  activate r
+  r -> r : рассчитатьСтоимость()
+  r --> svc : стоимость + штраф
+  deactivate r
+  ref over svc, r : ВИ-08 «Оплатить поездку»
+  svc ->> bus : EvacuationRequested
+  svc --> app : чек со штрафом
+
+else автомобиль в зоне завершения
+  svc -> r : завершить(время, пробег)
+  activate r
+  r -> r : рассчитатьСтоимость()
+  r --> svc : стоимость
+  deactivate r
+  ref over svc, r : ВИ-08 «Оплатить поездку»
+  opt списание отклонено
+    svc -> r : зафиксироватьЗадолженность()
+    svc ->> bus : DebtRegistered
+  end
+  svc ->> bus : RentalClosed
+  svc --> app : чек
+end
+
+deactivate svc
+app --> c : результат
+deactivate app
+@enduml

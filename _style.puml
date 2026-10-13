@@ -41,3 +41,22 @@ skinparam sequence {
   ParticipantBorderColor #2C6FB0
   ParticipantBackgroundColor #EAF2FB
 }
+skinparam object {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+}
+skinparam state {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+  ArrowColor #55606A
+}
+skinparam activity {
+  BorderColor #2C6FB0
+  BackgroundColor #EAF2FB
+  DiamondBorderColor #E8A33D
+  DiamondBackgroundColor #FFF6DA
+}
+skinparam swimlane {
+  BorderColor #55606A
+  TitleFontStyle bold
+}
