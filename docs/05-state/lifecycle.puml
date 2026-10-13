@@ -1,0 +1,56 @@
+@startuml
+!include ../../_style.puml
+title Жизненный цикл объекта «Аренда»
+hide empty description
+
+state "Активна" as Active {
+  state "В пути" as Driving
+  state "Ожидание\n(паркинг-режим)" as Parking
+  [*] --> Driving
+  Driving --> Parking : зажиганиеВыключено
+  Parking --> Driving : зажиганиеВключено
+}
+Active : entry / запуститьТарификацию()
+Active : exit / остановитьТарификацию()
+
+state "Завершается" as Ending
+Ending : entry / запроситьКоординаты()
+
+state "На проверке" as Review
+Review : entry / уведомитьОператора()
+
+state "Ожидает оплаты" as AwaitPay
+AwaitPay : entry / списатьОплату()
+
+state "Задолженность" as Debt
+Debt : entry / заблокироватьНовыеБрони()
+
+state "Закрыта" as Closed
+Closed : entry / отправитьЧек()
+
+state "Аннулирована" as Cancelled
+
+state "успех" as EndOk <<end>>
+state "неуспех" as EndFail <<end>>
+
+[*] --> Active : разблокировкаПодтверждена
+
+Active --> Ending : завершить()
+Active --> Cancelled : аварийнаяБлокировка() / вызватьОператора()
+
+Ending --> AwaitPay : координатыПолучены\n[в зоне]
+Ending --> Active : продолжитьПоездку()\n[вне зоны]
+Ending --> AwaitPay : подтвердитьЗавершение()\n[вне зоны] / начислитьШтраф(ЗАВЕРШЕНИЕ_ВНЕ_ЗОНЫ)
+Ending --> Review : after(30 с)\n[координат нет]
+
+Review --> AwaitPay : операторПодтвердилМесто
+Review --> Cancelled : операторАннулировал
+
+AwaitPay --> Closed : оплатаПрошла
+AwaitPay --> Debt : оплатаОтклонена
+Debt --> AwaitPay : after(24 ч)
+Debt --> AwaitPay : when(баланс ≥ долга)
+
+Closed --> EndOk
+Cancelled --> EndFail
+@enduml
