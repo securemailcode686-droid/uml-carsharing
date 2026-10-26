@@ -11,7 +11,7 @@ System_Ext(obu, "Бортовой модуль", "Телематический �
 System_Ext(payment, "Платёжный шлюз", "Эквайринг: списание с банковских карт")
 System_Ext(sms, "SMS-шлюз", "Доставка одноразовых кодов входа")
 
-Rel(client carsharing, "Ищет, бронирует, открывает и завершает аренду", "HTTPS")
+Rel(client, carsharing, "Ищет, бронирует, открывает и завершает аренду", "HTTPS")
 Rel(operator, carsharing, "Разбирает инциденты и ручные проверки", "HTTPS")
 Rel(carsharing, obu, "Команды «открыть» / «закрыть», запрос телеметрии", "MQTT/TLS")
 Rel_Back(carsharing, obu, "Координаты, пробег, зажигание", "MQTT/TLS")
