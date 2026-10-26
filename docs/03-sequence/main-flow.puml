@@ -3,8 +3,8 @@
 title ВИ-04 «Открыть автомобиль по телефону»: основной сценарий
 
 actor       "Клиент"               as c
-participant "Приложение"           as app
-participant "СервисАренды"         as svc
+participant "Мобильное приложение"         as app
+participant "RentalService"         as svc
 participant "b-552 : Бронь"        as b
 actor       "Бортовой модуль"      as obu <<system>>
 

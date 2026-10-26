@@ -1,0 +1,49 @@
+@startuml
+!include ../../_style.puml
+title ВИ-08 «Оплатить поездку» (ВИ-09 картой / ВИ-12 бонусным счётом)
+
+participant "RentalService"            as svc
+participant "rent-901 : Аренда"        as r
+participant "kl-118 : Клиент"          as kl
+participant "card-1 : КартаОплаты"     as card
+participant "bonus-1 : БонусныйСчёт"   as bonus
+actor       "Платёжный шлюз"           as pg <<system>>
+
+[-> svc : оплатить(аренда)
+activate svc
+svc -> r : рассчитатьСтоимость()
+activate r
+r --> svc : сумма (поездка + штрафы)
+deactivate r
+
+svc -> kl : основнойСпособОплаты()
+activate kl
+kl --> svc : способ : СпособОплаты
+deactivate kl
+
+alt способ — КартаОплаты (ВИ-09)
+  svc -> card : списать(сумма)
+  activate card
+  card -> pg : POST /payments (токен карты, сумма, ключ идемпотентности = id аренды)
+  activate pg
+  pg --> card : APPROVED / DECLINED
+  deactivate pg
+  card --> svc : Транзакция
+  deactivate card
+else способ — БонусныйСчёт (ВИ-12)
+  svc -> bonus : списать(сумма)
+  activate bonus
+  bonus -> bonus : проверить баланс ≥ сумма\n(блокировка строки счёта)
+  bonus --> svc : Транзакция
+  deactivate bonus
+end
+
+[<-- svc : Транзакция (успех / отказ)
+deactivate svc
+
+note right of pg
+  Ключ идемпотентности — id аренды:
+  повтор после таймаута не спишет
+  деньги дважды (traceability.md, ВИ-08).
+end note
+@enduml

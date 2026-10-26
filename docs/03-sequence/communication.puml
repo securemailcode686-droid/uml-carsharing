@@ -3,10 +3,10 @@
 title ВИ-04 «Открыть автомобиль по телефону»: диаграмма коммуникации
 
 object "<u>:Клиент</u>"                   as c
-object "<u>app : Приложение</u>"          as app
-object "<u>svc : СервисАренды</u>"        as svc
+object "<u>app : Мобильное приложение</u>"          as app
+object "<u>svc : RentalService</u>"        as svc
 object "<u>b-552 : Бронь</u>"             as b
-object "<u>obu : БортовойМодуль</u>"      as obu
+object "<u>obu : Бортовой модуль</u>"      as obu
 object "<u>rent-901 : Аренда</u>"         as r
 
 c   -- app : 1: открыть(автомобиль) >\n4: «Автомобиль открыт» <

@@ -3,8 +3,8 @@
 title ВИ-05 «Завершить аренду»: исключения
 
 actor       "Клиент"                 as c
-participant "Приложение"             as app
-participant "СервисАренды"           as svc
+participant "Мобильное приложение"           as app
+participant "RentalService"           as svc
 actor       "Бортовой модуль"        as obu <<system>>
 participant "zone-3 : ЗонаЗавершения" as z
 participant "rent-901 : Аренда"      as r
@@ -56,7 +56,7 @@ else вне зоны и клиент подтвердил завершение
   r -> r : рассчитатьСтоимость()
   r --> svc : стоимость + штраф
   deactivate r
-  ref over svc, r : ВИ-08 «Оплатить поездку»
+  ref over svc, r : ВИ-08 «Оплатить поездку» (payment.puml)
   svc ->> bus : EvacuationRequested
   svc --> app : чек со штрафом
 
@@ -66,13 +66,16 @@ else автомобиль в зоне завершения
   r -> r : рассчитатьСтоимость()
   r --> svc : стоимость
   deactivate r
-  ref over svc, r : ВИ-08 «Оплатить поездку»
-  opt списание отклонено
+  ref over svc, r : ВИ-08 «Оплатить поездку» (payment.puml)
+  alt списание прошло
+    svc -> r : закрыть()
+    svc ->> bus : RentalClosed
+    svc --> app : чек
+  else списание отклонено
     svc -> r : зафиксироватьЗадолженность()
     svc ->> bus : DebtRegistered
+    svc --> app : чек с задолженностью
   end
-  svc ->> bus : RentalClosed
-  svc --> app : чек
 end
 
 deactivate svc
