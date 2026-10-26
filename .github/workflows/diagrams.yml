@@ -1,0 +1,80 @@
+name: Render diagrams
+
+on:
+  push:
+    paths: ['docs/**/*.puml', 'docs/**/*.dsl', '_style.puml', '.github/workflows/diagrams.yml']
+  pull_request:
+    paths: ['docs/**/*.puml', 'docs/**/*.dsl', '_style.puml', '.github/workflows/diagrams.yml']
+  workflow_dispatch:
+
+env:
+  PLANTUML_VERSION: '1.2025.2'
+  STRUCTURIZR_CLI_VERSION: '2025.05.28'
+
+jobs:
+  render:
+    name: PlantUML (UML + C4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Download PlantUML
+        run: |
+          curl -sSL -o plantuml.jar \
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+
+      - name: Render PNG and SVG
+        # -failfast2: сборка падает на первой синтаксической ошибке.
+        # Без флага PlantUML нарисует картинку с текстом ошибки и вернёт код 0.
+        run: |
+          java -jar plantuml.jar -failfast2 -tpng -o "$PWD/out/png" "docs/**/*.puml"
+          java -jar plantuml.jar -failfast2 -tsvg -o "$PWD/out/svg" "docs/**/*.puml"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagrams
+          path: out/
+
+  structurizr:
+    name: Structurizr DSL (validate + export)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Download Structurizr CLI and PlantUML
+        run: |
+          curl -sSL -o cli.zip \
+            "https://github.com/structurizr/cli/releases/download/v${STRUCTURIZR_CLI_VERSION}/structurizr-cli.zip"
+          unzip -q cli.zip -d structurizr-cli
+          curl -sSL -o plantuml.jar \
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+
+      - name: Validate workspace.dsl
+        run: ./structurizr-cli/structurizr.sh validate -workspace docs/06-c4/workspace.dsl
+
+      - name: Export views to C4-PlantUML and render
+        run: |
+          ./structurizr-cli/structurizr.sh export -workspace docs/06-c4/workspace.dsl \
+            -format plantuml/c4plantuml -output out/structurizr
+          java -jar plantuml.jar -failfast2 -tpng "out/structurizr/*.puml"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: structurizr-views
+          path: out/structurizr/
