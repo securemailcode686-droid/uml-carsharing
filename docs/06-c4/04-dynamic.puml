@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Dynamic>
+title Динамический вид C4: ВИ-05 «Завершить аренду» — автомобиль вне зоны, клиент завершает со штрафом
+
+Person(client, "Клиент")
+Container(app, "Мобильное приложение", "Kotlin, Swift")
+Container(api, "Backend API", "Spring Boot")
+Container(tgw, "Телематический шлюз", "Go")
+System_Ext(obu, "Бортовой модуль")
+ContainerDb(db, "Основная БД", "PostgreSQL + PostGIS")
+System_Ext(payment, "Платёжный шлюз")
+ContainerQueue(bus, "Очередь событий", "RabbitMQ")
+Container(worker, "Обработчик событий", "Kotlin")
+
+RelIndex(1, client, app, "Нажимает «Завершить аренду»")
+RelIndex(2, app, api, "POST /rentals/{id}/finish", "JSON/HTTPS")
+RelIndex(3, api, tgw, "Запросить координаты и пробег", "gRPC")
+RelIndex(4, tgw, obu, "Запрос телеметрии (до 3 попыток)", "MQTT/TLS")
+RelIndex(5, api, db, "ST_Contains(зона, точка) → вне зоны", "JDBC")
+RelIndex(6, app, api, "Клиент подтвердил завершение со штрафом", "JSON/HTTPS")
+RelIndex(7, api, db, "Штраф ЗАВЕРШЕНИЕ_ВНЕ_ЗОНЫ, стоимость, статус ОЖИДАЕТ_ОПЛАТЫ", "JDBC")
+RelIndex(8, api, payment, "Списать стоимость + штраф", "HTTPS/REST")
+RelIndex(9, api, tgw, "Заблокировать двери", "gRPC")
+RelIndex(10, api, bus, "EvacuationRequested, RentalClosed", "AMQP")
+RelIndex(11, bus, worker, "Доставляет EvacuationRequested", "AMQP")
+RelIndex(12, worker, api, "Пометить авто ТРЕБУЕТ_ЭВАКУАЦИИ, задача оператору", "JSON/HTTPS")
+@enduml

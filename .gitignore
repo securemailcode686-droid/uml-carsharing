@@ -1,4 +1,16 @@
-out/
+# Картинки — сборочный артефакт: их рендерит CI из .puml.
+# Единственное исключение — out/png: на эти PNG ссылается docs/ARCHITECTURE.md.
 *.png
 *.svg
+!out/png/
+!out/png/*.png
+out/svg/
+out/structurizr/
+
+# Инструменты, которые CI скачивает сам
+plantuml.jar
+cli.zip
+structurizr-cli/
+
+# Служебные файлы macOS
 .DS_Store

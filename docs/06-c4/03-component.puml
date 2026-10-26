@@ -1,0 +1,54 @@
+@startuml
+!include <C4/C4_Component>
+title Уровень 3 — Components: контейнер «Backend API»
+
+Container(app, "Мобильное приложение", "Kotlin, Swift")
+Container(console, "Панель оператора", "React")
+Container(worker, "Обработчик событий", "Kotlin")
+Container(tgw, "Телематический шлюз", "Go")
+ContainerDb(db, "Основная БД", "PostgreSQL 16 + PostGIS")
+ContainerQueue(bus, "Очередь событий", "RabbitMQ")
+System_Ext(payment, "Платёжный шлюз")
+System_Ext(sms, "SMS-шлюз")
+
+Container_Boundary(api, "Backend API") {
+  Component(ctrl, "RentalController", "Spring MVC", "REST-эндпоинты приложения, панели оператора и служебные")
+  Component(account, "AccountService", "Kotlin", "Вход по SMS-коду, клиенты, способы оплаты")
+  Component(booking, "BookingService", "Kotlin", "Брони: создание, отмена, истечение")
+  Component(rental, "RentalService", "Kotlin", "Жизненный цикл аренды (автомат), штрафы")
+  Component(tariff, "TariffEngine", "Kotlin", "Расчёт стоимости по правилу тарификации")
+  Component(fleet, "FleetService", "Kotlin", "Автомобили, их состояния, зоны завершения")
+  Component(pay, "PaymentService", "Kotlin", "Списание через способ оплаты клиента")
+  Component(tele, "TelematicsClient", "gRPC-клиент", "Команды автомобилю с повторами и таймаутами")
+  Component(repo, "Repositories", "Spring Data JPA, Hibernate Spatial", "Доступ к данным, геозапросы")
+}
+
+Rel(app, ctrl, "Брони, аренды", "JSON/HTTPS")
+Rel(console, ctrl, "Инциденты, проверки", "JSON/HTTPS")
+Rel(worker, ctrl, "Служебные операции", "JSON/HTTPS")
+
+Rel(ctrl, account, "вход, профиль")
+Rel(ctrl, booking, "брони")
+Rel(ctrl, rental, "аренды")
+
+Rel(booking, fleet, "резервирует автомобиль")
+Rel(rental, booking, "использует бронь")
+Rel(rental, tele, "открыть / закрыть, координаты")
+Rel(rental, fleet, "проверяет зону, меняет состояние авто")
+Rel(rental, tariff, "рассчитывает стоимость")
+Rel(rental, pay, "списывает оплату")
+Rel(pay, account, "способ оплаты клиента")
+
+Rel(account, repo, "использует")
+Rel(booking, repo, "использует")
+Rel(rental, repo, "использует")
+Rel(fleet, repo, "использует")
+
+Rel(repo, db, "Читает и пишет", "JDBC")
+Rel(rental, bus, "Публикует события", "AMQP")
+Rel(tele, tgw, "Команды и телеметрия", "gRPC")
+Rel(pay, payment, "Списание", "HTTPS/REST")
+Rel(account, sms, "Коды входа", "HTTPS")
+
+SHOW_LEGEND()
+@enduml

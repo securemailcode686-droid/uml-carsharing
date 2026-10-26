@@ -1,0 +1,54 @@
+@startuml
+!include ../../_style.puml
+title Диаграмма развёртывания (UML): сервис каршеринга «ГоуКар»
+left to right direction
+skinparam nodesep 30
+skinparam ranksep 60
+
+node "Смартфон клиента\n(Android / iOS)" as phone {
+  artifact "goucar-app\n(.apk / .ipa)" as appart
+}
+node "Рабочее место оператора" as ws {
+  artifact "Браузер" as browser
+}
+
+node "Kubernetes-кластер (Yandex Cloud)" as k8s {
+  node "Pod: backend-api (×3)" as podapi {
+    artifact "backend-api.jar" as apijar
+  }
+  node "Pod: telematics-gw (×2)" as podtgw {
+    artifact "telematics-gw\n(Go-бинарник)" as tgwbin
+  }
+  node "Pod: event-worker (×1)" as podw {
+    artifact "event-worker.jar" as wjar
+  }
+  node "Pod: console (×1)" as podc {
+    artifact "nginx + console\n(статика React)" as cons
+  }
+}
+
+node "Managed PostgreSQL" as dbnode {
+  database "PostgreSQL 16\n+ PostGIS 3" as pg
+}
+node "Managed RabbitMQ" as mqnode {
+  artifact "RabbitMQ 3.13" as mq
+}
+node "Автомобиль" as car {
+  artifact "Прошивка\nбортового модуля (LTE)" as fw
+}
+cloud "Платёжный шлюз" as payext
+cloud "SMS-шлюз" as smsext
+
+appart ..> apijar : HTTPS/443
+browser ..> cons : HTTPS/443
+browser ..> apijar : HTTPS/443
+apijar ..> pg : JDBC/5432
+apijar ..> mq : AMQP/5672
+mq ..> wjar : AMQP/5672
+wjar ..> apijar : HTTPS/443
+apijar ..> tgwbin : gRPC/9090
+fw ..> tgwbin : MQTT/TLS 8883\n(соединение\nинициирует автомобиль)
+apijar ..> payext : HTTPS/443
+apijar ..> smsext : HTTPS/443
+
+@enduml

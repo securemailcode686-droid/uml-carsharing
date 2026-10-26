@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Container>
+title Уровень 2 — Containers: сервис каршеринга «ГоуКар»
+
+Person(client, "Клиент")
+Person(operator, "Оператор поддержки")
+
+System_Boundary(carsharing, "Сервис каршеринга «ГоуКар»") {
+  Container(app, "Мобильное приложение", "Kotlin (Android), Swift (iOS)", "Карта автомобилей, бронь, открытие по телефону, чек")
+  Container(console, "Панель оператора", "React", "Инциденты, ручная проверка места стоянки, штрафы")
+  Container(api, "Backend API", "Kotlin / Spring Boot", "Брони, аренды, тарификация, штрафы, зоны; REST")
+  Container(tgw, "Телематический шлюз", "Go", "Держит соединения с тысячами бортовых модулей; команды и телеметрия")
+  Container(worker, "Обработчик событий", "Kotlin", "Истечение броней, повтор списаний, заявки на эвакуацию")
+  ContainerDb(db, "Основная БД", "PostgreSQL 16 + PostGIS", "Клиенты, брони, аренды, штрафы, полигоны зон")
+  ContainerQueue(bus, "Очередь событий", "RabbitMQ", "RentalClosed, EvacuationRequested, DebtRegistered, ManualCheckRequired")
+}
+
+System_Ext(obu, "Бортовой модуль")
+System_Ext(payment, "Платёжный шлюз")
+System_Ext(sms, "SMS-шлюз")
+
+Rel(client, app, "Пользуется")
+Rel(operator, console, "Пользуется", "HTTPS")
+Rel(app, api, "Вызывает", "JSON/HTTPS")
+Rel(console, api, "Вызывает", "JSON/HTTPS")
+Rel(api, db, "Читает и пишет", "JDBC")
+Rel(api, tgw, "Команды автомобилю, запрос телеметрии", "gRPC")
+Rel(tgw, obu, "Команды; принимает телеметрию", "MQTT/TLS")
+Rel(api, bus, "Публикует доменные события", "AMQP")
+Rel(bus, worker, "Доставляет события", "AMQP")
+Rel(worker, api, "Вызывает служебные операции", "JSON/HTTPS")
+Rel(api, payment, "Списывает оплату и штрафы", "HTTPS/REST")
+Rel(api, sms, "Отправляет коды входа", "HTTPS")
+
+SHOW_LEGEND()
+@enduml
