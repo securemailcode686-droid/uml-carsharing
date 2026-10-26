@@ -6,7 +6,8 @@ title Сервис каршеринга: диаграмма вариантов �
 actor "Клиент"               as client
 actor "Оператор поддержки"   as operator
 actor "Платёжный шлюз"       as gateway  <<system>>
-actor "Бортовой модуль\nавтомобиля" as obu <<system>>
+actor "Бортовой модуль"     as obu      <<system>>
+actor "SMS-шлюз"            as sms      <<system>>
 
 rectangle "Сервис каршеринга" {
   usecase "Найти автомобиль\nпоблизости"        as UC_find
@@ -34,6 +35,7 @@ operator -- UC_fine
 obu     -- UC_unlock
 obu     -- UC_zone
 gateway -- UC_pay_card
+sms     -- UC_auth
 
 UC_book   ..> UC_auth : <<include>>
 UC_unlock ..> UC_auth : <<include>>
